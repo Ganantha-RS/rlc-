@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulasi Interaktif Rangkaian RLC</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;700;800&family=Inter:wght@400;500;600&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
+        h1, h2, h3, h4, .font-heading { font-family: 'Plus Jakarta Sans', sans-serif; }
+        
+        /* Custom Slider Styling */
+        input[type=range] {
+            -webkit-appearance: none;
+            width: 100%;
+            background: transparent;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 18px;
+            width: 18px;
+            border-radius: 50%;
+            background: #0ea5e9;
+            cursor: pointer;
+            margin-top: -6px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 6px;
+            cursor: pointer;
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        input[type=range]:focus { outline: none; }
+        
+        canvas {
+            background-color: #0f172a;
+            border-radius: 12px;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
+        }
+    </style>
+</head>
+<body class="text-slate-800 p-4 md:p-8 min-h-screen flex flex-col">
+
+    <!-- Header -->
+    <header class="mb-8 text-center md:text-left flex flex-col md:flex-row justify-between items-center gap-4">
+        <div>
+            <h1 class="text-3xl md:text-4xl font-extrabold text-slate-900 tracking-tight">Simulasi <span class="text-sky-500">RLC</span></h1>
+            <p class="text-slate-500 mt-1">Visualisasi Interaktif Gelombang Arus dan Tegangan AC</p>
+        </div>
+        <button id="btnResonansi" class="bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-3 px-6 rounded-lg shadow-lg hover:shadow-emerald-500/30 transition-all flex items-center gap-2">
+            <i class="fa-solid fa-wand-magic-sparkles"></i> Set Resonansi
+        </button>
+    </header>
+
+    <!-- Main Content -->
+    <main class="grid grid-cols-1 lg:grid-cols-12 gap-6 flex-grow">
+        
+        <!-- Left Panel: Inputs (Sliders) -->
+        <div class="lg:col-span-4 bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex flex-col gap-6">
+            <h2 class="text-xl font-bold font-heading text-slate-800 border-b pb-3"><i class="fa-solid fa-sliders mr-2 text-sky-500"></i> Parameter Komponen</h2>
+            
+            <!-- Resistor Input -->
+            <div class="space-y-2">
+                <div class="flex justify-between items-center">
+                    <label class="font-semibold text-slate-700">Resistor (R)</label>
+                    <div class="flex items-center gap-1">
+                        <input type="number" id="numR" class="w-20 p-1 text-right border rounded focus:ring-sky-500 focus:border-sky-500 bg-slate-50" min="1" max="500" value="50">
+                        <span class="text-slate-500 text-sm">Ω</span>
+                    </div>
+                </div>
+                <input type="range" id="sliderR" min="1" max="500" value="50">
+            </div>
+
+            <!-- Induktor Input -->
+            <div class="space-y-2">
+                <div class="flex justify-between items-center">
+                    <label class="font-semibold text-slate-700">Induktor (L)</label>
+                    <div class="flex items-center gap-1">
+                        <input type="number" id="numL" class="w-20 p-1 text-right border rounded focus:ring-sky-500 focus:border-sky-500 bg-slate-50" min="1" max="1000" value="150">
+                        <span class="text-slate-500 text-sm">mH</span>
+                    </div>
+                </div>
+                <input type="range" id="sliderL" min="1" max="1000" value="150">
+            </div>
+
+            <!-- Kapasitor Input -->
+            <div class="space-y-2">
+                <div class="flex justify-between items-center">
+                    <label class="font-semibold text-slate-700">Kapasitor (C)</label>
+                    <div class="flex items-center gap-1">
+                        <input type="number" id="numC" class="w-20 p-1 text-right border rounded focus:ring-sky-500 focus:border-sky-500 bg-slate-50" min="1" max="1000" value="100">
+                        <span class="text-slate-500 text-sm">μF</span>
+                    </div>
+                </div>
+                <input type="range" id="sliderC" min="1" max="1000" value="100">
+            </div>
+
+            <hr class="my-2 border-slate-100">
+
+            <!-- Tegangan Input -->
+            <div class="space-y-2">
+                <div class="flex justify-between items-center">
+                    <label class="font-semibold text-slate-700">Tegangan AC (V)</label>
+                    <div class="flex items-center gap-1">
+                        <input type="number" id="numV" class="w-20 p-1 text-right border rounded focus:ring-sky-500 focus:border-sky-500 bg-slate-50" min="1" max="300" value="220">
+                        <span class="text-slate-500 text-sm">V</span>
+                    </div>
+                </div>
+                <input type="range" id="sliderV" min="1" max="300" value="220">
+            </div>
+
+            <!-- Frekuensi Input -->
+            <div class="space-y-2">
+                <div class="flex justify-between items-center">
+                    <label class="font-semibold text-slate-700">Frekuensi (f)</label>
+                    <div class="flex items-center gap-1">
+                        <input type="number" id="numF" class="w-20 p-1 text-right border rounded focus:ring-sky-500 focus:border-sky-500 bg-slate-50" min="1" max="200" value="50">
+                        <span class="text-slate-500 text-sm">Hz</span>
+                    </div>
+                </div>
+                <input type="range" id="sliderF" min="1" max="200" value="50">
+            </div>
+        </div>
+
+        <!-- Right Panel: Output & Graph -->
+        <div class="lg:col-span-8 flex flex-col gap-6">
+            
+            <!-- Result Cards -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 text-center">
+                    <p class="text-xs text-slate-500 font-bold uppercase tracking-wider mb-1">Reaktansi Induktif</p>
+                    <p class="text-2xl font-bold font-heading text-slate-800"><span id="outXL">0</span> <span class="text-sm font-normal text-slate-400">Ω</span></p>
+                    <p class="text-xs text-slate-400 mt-1">X<sub>L</sub></p>
+                </div>
+                <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 text-center">
+                    <p class="text-xs text-slate-500 font-bold uppercase tracking-wider mb-1">Reaktansi Kapasitif</p>
+                    <p class="text-2xl font-bold font-heading text-slate-800"><span id="outXC">0</span> <span class="text-sm font-normal text-slate-400">Ω</span></p>
+                    <p class="text-xs text-slate-400 mt-1">X<sub>C</sub></p>
+                </div>
+                <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 text-center">
+                    <p class="text-xs text-slate-500 font-bold uppercase tracking-wider mb-1">Impedansi Total</p>
+                    <p class="text-2xl font-bold font-heading text-slate-800"><span id="outZ">0</span> <span class="text-sm font-normal text-slate-400">Ω</span></p>
+                    <p class="text-xs text-slate-400 mt-1">Z</p>
+                </div>
+                <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 text-center relative overflow-hidden">
+                    <div id="sifatBg" class="absolute inset-0 opacity-10 bg-slate-500"></div>
+                    <p class="text-xs text-slate-500 font-bold uppercase tracking-wider mb-1 relative z-10">Sifat Rangkaian</p>
+                    <p id="outSifat" class="text-xl md:text-2xl font-bold font-heading text-slate-800 relative z-10">-</p>
+                    <p id="outBedaFase" class="text-xs font-bold mt-1 relative z-10">-</p>
+                </div>
+            </div>
+
+            <!-- Oscilloscope Canvas -->
+            <div class="bg-white p-1 rounded-2xl shadow-sm border border-slate-200 flex-grow flex flex-col">
+                <div class="flex justify-between items-center p-3 border-b border-slate-100">
+                    <h3 class="font-bold font-heading text-slate-700"><i class="fa-solid fa-wave-square text-indigo-500 mr-2"></i> Layar Osiloskop</h3>
+                    <div class="flex gap-4 text-sm font-semibold">
+                        <div class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-sky-400 shadow-[0_0_8px_#38bdf8]"></span> Tegangan (V)</div>
+                        <div class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-amber-400 shadow-[0_0_8px_#fbbf24]"></span> Arus (I)</div>
+                    </div>
+                </div>
+                <div class="relative w-full h-[300px] md:h-full min-h-[300px]">
+                    <!-- Canvas will expand to fill this container -->
+                    <canvas id="oscCanvas" class="absolute inset-0 w-full h-full"></canvas>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer: Rumus -->
+    <footer class="mt-8 bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+        <h3 class="font-bold font-heading text-slate-700 mb-4 border-b pb-2"><i class="fa-solid fa-calculator text-slate-400 mr-2"></i> Referensi Rumus</h3>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm text-slate-600 font-mono bg-slate-50 p-4 rounded-lg">
+            <div>
+                <p class="font-semibold text-slate-800 mb-1">Reaktansi Induktif:</p>
+                <p>X<sub>L</sub> = 2π f L</p>
+            </div>
+            <div>
+                <p class="font-semibold text-slate-800 mb-1">Reaktansi Kapasitif:</p>
+                <p>X<sub>C</sub> = 1 / (2π f C)</p>
+            </div>
+            <div>
+                <p class="font-semibold text-slate-800 mb-1">Impedansi:</p>
+                <p>Z = √(R² + (X<sub>L</sub> - X<sub>C</sub>)²)</p>
+            </div>
+            <div>
+                <p class="font-semibold text-slate-800 mb-1">Frekuensi Resonansi:</p>
+                <p>f<sub>res</sub> = 1 / (2π √(LC))</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Logic Script -->
+    <script>
+        // Variables
+        let R, L, C, V, f;
+        let XL, XC, Z, I, phaseAngleRad, phaseAngleDeg;
+        let isResonance = false;
+
+        // DOM Elements
+        const inputs = ['R', 'L', 'C', 'V', 'F'];
+        const elements = {};
+        inputs.forEach(id => {
+            elements[`num${id}`] = document.getElementById(`num${id}`);
+            elements[`slider${id}`] = document.getElementById(`slider${id}`);
+        });
+
+        const outputs = {
+            XL: document.getElementById('outXL'),
+            XC: document.getElementById('outXC'),
+            Z: document.getElementById('outZ'),
+            Sifat: document.getElementById('outSifat'),
+            BedaFase: document.getElementById('outBedaFase'),
+            SifatBg: document.getElementById('sifatBg')
+        };
+
+        const canvas = document.getElementById('oscCanvas');
+        const ctx = canvas.getContext('2d');
+        let time = 0;
+
+        // Resize canvas to container
+        function resizeCanvas() {
+            const rect = canvas.parentElement.getBoundingClientRect();
+            canvas.width = rect.width;
+            canvas.height = rect.height;
+        }
+        window.addEventListener('resize', resizeCanvas);
+
+        // Sync Slider and Number Input
+        function syncInputs(id, source) {
+            let val = parseFloat(source.value);
+            // Clamp values
+            const min = parseFloat(source.min);
+            const max = parseFloat(source.max);
+            if (val < min) val = min;
+            if (val > max) val = max;
+            
+            elements[`num${id}`].value = val;
+            elements[`slider${id}`].value = val;
+            calculateRLC();
+        }
+
+        inputs.forEach(id => {
+            elements[`num${id}`].addEventListener('input', (e) => syncInputs(id, e.target));
+            elements[`slider${id}`].addEventListener('input', (e) => syncInputs(id, e.target));
+        });
+
+        // Main Calculation Function
+        function calculateRLC() {
+            // Get values
+            R = parseFloat(elements.numR.value);
+            L = parseFloat(elements.numL.value) / 1000; // Convert mH to H
+            C = parseFloat(elements.numC.value) / 1000000; // Convert uF to F
+            V = parseFloat(elements.numV.value);
+            f = parseFloat(elements.numF.value);
+
+            // Calculations
+            const omega = 2 * Math.PI * f;
+            XL = omega * L;
+            XC = 1 / (omega * C);
+            Z = Math.sqrt(Math.pow(R, 2) + Math.pow(XL - XC, 2));
+            I = V / Z;
+            
+            // Phase Angle (Current lags voltage by this angle if inductive)
+            phaseAngleRad = Math.atan2((XL - XC), R);
+            phaseAngleDeg = phaseAngleRad * (180 / Math.PI);
+
+            // Update UI
+            outputs.XL.textContent = XL.toFixed(1);
+            outputs.XC.textContent = XC.toFixed(1);
+            outputs.Z.textContent = Z.toFixed(1);
+
+            // Determine Sifat (Tolerance for floating point)
+            if (Math.abs(XL - XC) < 0.5) {
+                isResonance = true;
+                outputs.Sifat.textContent = "Resonansi";
+                outputs.Sifat.className = "text-xl md:text-2xl font-bold font-heading text-emerald-600 relative z-10";
+                outputs.BedaFase.textContent = "Arus & Tegangan Sefase";
+                outputs.BedaFase.className = "text-xs font-bold mt-1 relative z-10 text-emerald-500";
+                outputs.SifatBg.className = "absolute inset-0 opacity-20 bg-emerald-400";
+            } else if (XL > XC) {
+                isResonance = false;
+                outputs.Sifat.textContent = "Induktif";
+                outputs.Sifat.className = "text-xl md:text-2xl font-bold font-heading text-orange-500 relative z-10";
+                outputs.BedaFase.textContent = `Arus tertinggal ${Math.abs(phaseAngleDeg).toFixed(1)}°`;
+                outputs.BedaFase.className = "text-xs font-bold mt-1 relative z-10 text-orange-400";
+                outputs.SifatBg.className = "absolute inset-0 opacity-10 bg-orange-500";
+            } else {
+                isResonance = false;
+                outputs.Sifat.textContent = "Kapasitif";
+                outputs.Sifat.className = "text-xl md:text-2xl font-bold font-heading text-indigo-500 relative z-10";
+                outputs.BedaFase.textContent = `Arus mendahului ${Math.abs(phaseAngleDeg).toFixed(1)}°`;
+                outputs.BedaFase.className = "text-xs font-bold mt-1 relative z-10 text-indigo-400";
+                outputs.SifatBg.className = "absolute inset-0 opacity-10 bg-indigo-500";
+            }
+        }
+
+        // Resonance Button Logic
+        document.getElementById('btnResonansi').addEventListener('click', () => {
+            // f_res = 1 / (2 * pi * sqrt(LC))
+            const currentL = parseFloat(elements.numL.value) / 1000;
+            const currentC = parseFloat(elements.numC.value) / 1000000;
+            let fRes = 1 / (2 * Math.PI * Math.sqrt(currentL * currentC));
+            
+            // Clamp strictly for visual/slider boundaries
+            if(fRes > 200) fRes = 200;
+            if(fRes < 1) fRes = 1;
+
+            elements.numF.value = fRes.toFixed(1);
+            elements.sliderF.value = fRes.toFixed(1);
+            calculateRLC();
+        });
+
+        // Canvas Animation Loop
+        function drawOscilloscope() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            const w = canvas.width;
+            const h = canvas.height;
+            const centerY = h / 2;
+
+            // Draw Grid
+            ctx.strokeStyle = '#1e293b';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            for(let i = 0; i < w; i += 50) {
+                ctx.moveTo(i, 0); ctx.lineTo(i, h);
+            }
+            for(let i = 0; i < h; i += 50) {
+                ctx.moveTo(0, i); ctx.lineTo(w, i);
+            }
+            ctx.stroke();
+
+            // Draw center axes
+            ctx.strokeStyle = '#334155';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(0, centerY); ctx.lineTo(w, centerY);
+            ctx.stroke();
+
+            // Visualization scaling
+            // To make waves always look good, we normalize amplitudes for visual purpose.
+            const visualAmplitude = (h / 2) * 0.7; // 70% of half height
+            
+            // Wave parameters
+            // Frequency controls how fast it oscillates visually. We scale it so it looks nice.
+            const visualFreq = (f / 50) * 0.05; 
+            
+            ctx.lineWidth = 4;
+            ctx.lineJoin = 'round';
+
+            // Draw Voltage (Blue)
+            ctx.beginPath();
+            ctx.strokeStyle = '#38bdf8'; // Tailwind sky-400
+            ctx.shadowColor = '#38bdf8';
+            ctx.shadowBlur = 10;
+            for(let x = 0; x < w; x++) {
+                // v(t) = Vm * sin(wt)
+                const y = centerY - Math.sin((x * visualFreq) + time) * visualAmplitude;
+                if(x === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            }
+            ctx.stroke();
+
+            // Draw Current (Orange/Yellow)
+            ctx.beginPath();
+            ctx.strokeStyle = '#fbbf24'; // Tailwind amber-400
+            ctx.shadowColor = '#fbbf24';
+            ctx.shadowBlur = 10;
+            
+            // Note: If phaseAngleRad is positive (Inductive), current LAGS voltage (shifts right visually).
+            // Formula: i(t) = Im * sin(wt - phaseAngle)
+            for(let x = 0; x < w; x++) {
+                const y = centerY - Math.sin((x * visualFreq) + time - phaseAngleRad) * visualAmplitude;
+                if(x === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            }
+            ctx.stroke();
+
+            // Reset shadow
+            ctx.shadowBlur = 0;
+
+            // Increment time to animate (scroll left)
+            time -= 0.05; 
+            
+            requestAnimationFrame(drawOscilloscope);
+        }
+
+        // Initialize
+        window.onload = () => {
+            resizeCanvas();
+            calculateRLC();
+            drawOscilloscope();
+        };
+    </script>
+</body>
+</html>
